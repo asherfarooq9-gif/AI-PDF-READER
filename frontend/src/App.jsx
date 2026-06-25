@@ -1,5 +1,39 @@
 import { useState, useRef, useEffect, createContext, useContext, useCallback } from "react";
-import { Send, Sun, Moon, X, RotateCcw, AlertCircle, Loader2, FileText, ChevronDown, Paperclip, Trash2, Copy, Check, MoreHorizontal, Zap, ArrowUpRight, Command, Hash } from "lucide-react";
+import {
+  Send,
+  Sun,
+  Moon,
+  Upload,
+  X,
+  RotateCcw,
+  AlertCircle,
+  Loader2,
+  FileText,
+  ChevronDown,
+  Paperclip,
+  Trash2,
+  Copy,
+  Check,
+  MoreHorizontal,
+  Zap,
+  List,
+  Table,
+  Languages,
+  FileSearch,
+  Scale,
+  Brain,
+  AlertTriangle,
+  Calculator,
+  ChevronRight,
+  Sparkles,
+  History,
+  Command,
+  ArrowUpRight,
+  BookOpen,
+  MessageSquare,
+  Clock,
+  Eye,
+} from "lucide-react";
 
 const BASE = "http://127.0.0.1:8000";
 
@@ -9,8 +43,8 @@ const ThemeContext = createContext(null);
 const useTheme = () => useContext(ThemeContext);
 
 function ThemeProvider({ children }) {
-  const [mode, setMode] = useState("dark"); // "dark" | "light" | "terminal" | "paper"
-  const [accent, setAccent] = useState("blood"); // "blood" | "slime" | "gold" | "ice"
+  const [mode, setMode] = useState("dark");
+  const [accent, setAccent] = useState("blood");
 
   const cycleMode = useCallback(() => {
     setMode((m) => (m === "dark" ? "light" : m === "light" ? "terminal" : m === "terminal" ? "paper" : "dark"));
@@ -106,15 +140,28 @@ function ThemeProvider({ children }) {
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 
+const MODE_ICONS = { dark: Moon, light: Sun, terminal: Command, paper: FileText };
+const ACCENT_NAMES = { blood: "Blood", slime: "Slime", gold: "Gold", ice: "Ice" };
+
+const SMART_PROMPTS = [
+  { icon: Sparkles, label: "Summarize", template: "Summarize the key points of this document" },
+  { icon: List, label: "Bullets", template: "Convert the main content to bullet points" },
+  { icon: Table, label: "Table", template: "Organize the data into a table format" },
+  { icon: Languages, label: "Simplify", template: "Explain this like I'm 5 years old" },
+  { icon: FileSearch, label: "Find All", template: "Find all mentions of important terms with context" },
+  { icon: Brain, label: "Deep Dive", template: "Analyze the main arguments and evidence" },
+  { icon: Scale, label: "Compare", template: "Compare the pros and cons mentioned" },
+  { icon: AlertTriangle, label: "Risks", template: "Identify all risks, warnings, or red flags" },
+  { icon: Calculator, label: "Numbers", template: "Extract and summarize all numerical data" },
+  { icon: History, label: "Timeline", template: "Create a timeline of all events and dates" },
+];
+
 const SUGGESTIONS = [
   "Summarize this document",
   "What are the key points?",
   "Any action items or dates?",
   "Explain the main concepts",
 ];
-
-const MODE_ICONS = { dark: Moon, light: Sun, terminal: Command, paper: FileText };
-const ACCENT_NAMES = { blood: "Blood", slime: "Slime", gold: "Gold", ice: "Ice" };
 
 /* ============================ GLITCH TEXT ============================ */
 
@@ -217,9 +264,84 @@ function CursorTrail() {
   );
 }
 
+/* ============================ SMART PROMPTS ============================ */
+
+function SmartPrompts({ onSelect, palette }) {
+  return (
+    <div className="flex flex-wrap gap-2 mb-4">
+      {SMART_PROMPTS.map((p) => (
+        <button
+          key={p.label}
+          onClick={() => onSelect(p.template)}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-mono uppercase tracking-wider border transition-all"
+          style={{ 
+            borderColor: palette.border, 
+            color: palette.textMuted,
+            background: palette.surface 
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = palette.accent;
+            e.currentTarget.style.color = palette.accent;
+            e.currentTarget.style.background = palette.accentFaint;
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = palette.border;
+            e.currentTarget.style.color = palette.textMuted;
+            e.currentTarget.style.background = palette.surface;
+          }}
+        >
+          <p.icon size={12} />
+          {p.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/* ============================ FOLLOW-UP SUGGESTIONS ============================ */
+
+function FollowUpSuggestions({ suggestions, onSelect, palette }) {
+  if (!suggestions?.length) return null;
+  
+  return (
+    <div className="flex flex-col gap-2 my-4 pl-12">
+      <span className="text-[10px] font-mono uppercase tracking-wider" style={{ color: palette.textFaint }}>
+        Follow-up questions:
+      </span>
+      <div className="flex flex-wrap gap-2">
+        {suggestions.map((s, i) => (
+          <button
+            key={i}
+            onClick={() => onSelect(s)}
+            className="flex items-center gap-1 px-3 py-1.5 text-xs border transition-all"
+            style={{ 
+              borderColor: palette.border,
+              color: palette.textMuted,
+              borderRadius: "2px 12px 12px 12px"
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = palette.accent;
+              e.currentTarget.style.color = palette.accent;
+              e.currentTarget.style.background = palette.accentFaint;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = palette.border;
+              e.currentTarget.style.color = palette.textMuted;
+              e.currentTarget.style.background = "transparent";
+            }}
+          >
+            <ChevronRight size={10} />
+            {s}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /* ============================ MESSAGE BUBBLE ============================ */
 
-function MessageBubble({ message, onRetry, accent }) {
+function MessageBubble({ message, onRetry }) {
   const { palette } = useTheme();
   const [hovered, setHovered] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -760,12 +882,13 @@ function ChatWindow() {
   const [uploading, setUploading] = useState(false);
   const [asking, setAsking] = useState(false);
   const [pdfName, setPdfName] = useState(null);
+  const [followUps, setFollowUps] = useState([]);
   const bottomRef = useRef(null);
   const fileRef = useRef(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, asking]);
+  }, [messages, asking, followUps]);
 
   const uploadPdf = useCallback(async (e) => {
     const file = e.target.files?.[0];
@@ -808,10 +931,12 @@ function ChatWindow() {
   const clearPdf = useCallback(() => {
     setPdfName(null);
     setMessages([]);
+    setFollowUps([]);
   }, []);
 
   const newChat = useCallback(() => {
     setMessages([]);
+    setFollowUps([]);
   }, []);
 
   const askBackend = useCallback(async (q) => {
@@ -820,12 +945,17 @@ function ChatWindow() {
       const res = await fetch(`${BASE}/ask?q=${encodeURIComponent(q)}`);
       if (!res.ok) throw new Error("ask failed");
       const data = await res.json();
+      
       setMessages((m) => [...m, { 
         id: uid(), 
         role: "assistant", 
         text: data.answer,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
       }]);
+      
+      if (data.followups && Array.isArray(data.followups)) {
+        setFollowUps(data.followups);
+      }
     } catch {
       setMessages((m) => [
         ...m,
@@ -846,6 +976,7 @@ function ChatWindow() {
       const q = (text ?? input).trim();
       if (!q || asking || !pdfName) return;
       setInput("");
+      setFollowUps([]);
       setMessages((m) => [...m, { 
         id: uid(), 
         role: "user", 
@@ -867,10 +998,7 @@ function ChatWindow() {
   );
 
   return (
-    <div 
-      className="flex flex-col h-full relative overflow-hidden"
-      style={{ background: palette.bg, color: palette.text }}
-    >
+    <div className="flex flex-col h-full relative overflow-hidden" style={{ background: palette.bg, color: palette.text }}>
       <NoiseOverlay />
       <Scanlines />
       <CursorTrail />
@@ -894,9 +1022,20 @@ function ChatWindow() {
             />
           ) : (
             <div className="flex flex-col">
+              <SmartPrompts onSelect={sendMessage} palette={palette} />
+              
               {messages.map((m) => (
-                <MessageBubble key={m.id} message={m} onRetry={retry} accent={palette.accent} />
+                <MessageBubble key={m.id} message={m} onRetry={retry} />
               ))}
+              
+              {followUps.length > 0 && (
+                <FollowUpSuggestions 
+                  suggestions={followUps} 
+                  onSelect={sendMessage}
+                  palette={palette}
+                />
+              )}
+              
               {asking && <TypingIndicator palette={palette} />}
               <div ref={bottomRef} className="h-4" />
             </div>
